@@ -6,13 +6,6 @@ $(document).ready(function() {
     console.log('FEATURE_MANAGEMENT data:', featureManagementData);
     console.log('url data:', url);
 
-    if (!featureManagementData){
-      const url_h3 = document.createElement('h3');
-      url_h3.textContent = 'LaunchDarkly Not Detected. Try to refresh the page if this is a mistake.';
-      document.body.appendChild(url_h3);
-      return;
-    }
-
     // Assuming flagsState contains the given data
     metadata = featureManagementData;
 
@@ -23,6 +16,13 @@ $(document).ready(function() {
     const url_div = document.createElement('div');
     url_div.textContent = data.url;
     document.body.appendChild(url_div);
+
+    if (!featureManagementData){
+      const url_h3 = document.createElement('h3');
+      url_h3.textContent = 'LaunchDarkly Not Detected. Try to refresh the page if this is a mistake.';
+      document.body.appendChild(url_h3);
+      return;
+    }
 
     const metadata_h2 = document.createElement('h2');
     metadata_h2.textContent = 'Metadata';
