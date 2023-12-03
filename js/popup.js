@@ -1,117 +1,151 @@
-document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('save').addEventListener('click', saveSettings);
-  // Retrieve extension user settings
-  chrome.storage.local.get(null,function(storage) {
-    console.debug("clientId = " + storage.clientId);
-    document.getElementById('id').value = storage.clientId;
+$(document).ready(function() { 
+  chrome.storage.local.get(['featureManagementData', 'url'], function (data) {
+    var featureManagementData = data.featureManagementData;
+    const url = data.url;
+    // Use featureManagementData as needed in your popup.js
+    console.log('FEATURE_MANAGEMENT data:', featureManagementData);
+    console.log('url data:', url);
 
-    console.debug("userKey = " + storage.userKey);
-    document.getElementById('userKey').value = storage.userKey;
+    if (!featureManagementData){
+      const url_h3 = document.createElement('h3');
+      url_h3.textContent = 'LaunchDarkly Not Detected. Try to refresh the page if this is a mistake.';
+      document.body.appendChild(url_h3);
+      return;
+    }
 
-    console.debug("flagKey = " + storage.flagKey);
-    document.getElementById('flagKey').value = storage.flagKey;
+    // Assuming flagsState contains the given data
+    metadata = featureManagementData;
 
-    console.debug("enabled = " + storage.enabled);
-    document.getElementById('enabled').checked = storage.enabled;
+    const url_h3 = document.createElement('h3');
+    url_h3.textContent = 'URL (refresh for new data)';
+    document.body.appendChild(url_h3);
 
-    console.log("default = " + storage.default);
-    document.getElementById('default').checked = storage.default;
+    const url_div = document.createElement('div');
+    url_div.textContent = data.url;
+    document.body.appendChild(url_div);
 
-    console.log("customId = " + storage.customId);
-    document.getElementById('customId').value = storage.customId;    
-   
-    console.log("classEnabled = " + storage.classEnabled);
-    document.getElementById('classEnabled').checked = storage.classEnabled; 
+    const metadata_h2 = document.createElement('h2');
+    metadata_h2.textContent = 'Metadata';
+    document.body.appendChild(metadata_h2);
 
-    // Experimentation Options
-    console.log("expEnabled = " + storage.expEnabled);
-    document.getElementById('expEnabled').checked = storage.expEnabled; 
+    const metaTable = document.createElement('table');
+    metaTable.border = '0';
 
-    console.log("metricName = " + storage.metricName);
-    document.getElementById('metricName').value = storage.metricName;
+    const row = metaTable.insertRow();
+    const keyCell = row.insertCell(0);
+    const valueCell = row.insertCell(1);
 
-    console.log("winVar = " + storage.winVar);
-    document.getElementById('winVar').value = storage.winVar;
+    keyCell.textContent = "launchdarkly_client_id";
+    valueCell.textContent = metadata.launchdarkly_client_id;
 
-    console.log("winConversion = " + storage.winConversion);
-    document.getElementById('winConversion').value = storage.winConversion;
 
-    console.log("loseConversion = " + storage.loseConversion);
-    document.getElementById('loseConversion').value = storage.loseConversion;
+    for (const key in metadata.context) {
+      if (Object.hasOwnProperty.call(metadata.context, key)) {
+        const value = metadata.context[key];
 
-    console.log("refresh = " + storage.refresh);
-    document.getElementById('refresh').value = storage.refresh;
+        const row = metaTable.insertRow();
+        const keyCell = row.insertCell(0);
+        const valueCell = row.insertCell(1);
 
-    // Misc Options
-    console.log("debuggerHide = " + storage.debuggerHide);
-    document.getElementById('debuggerHide').checked = storage.debuggerHide;  
+        keyCell.textContent = key;
 
-    console.log("cssFlagKey = " + storage.cssFlagKey);
-    document.getElementById('cssFlagKey').value = storage.cssFlagKey;    
-  });
-  function saveSettings() {
-    // Demo Options
-    var cid = document.getElementById('id').value;
-    chrome.storage.local.set({'clientId': cid}, function() {
-      console.log("Settings saved. ClientId = " + cid);
+        if (typeof value === 'object') {
+          if (key === 'custom') {
+            for (const customKey in value) {
+              const customRow = metaTable.insertRow();
+              const customKeyCell = customRow.insertCell(0);
+              const customValueCell = customRow.insertCell(1);
+
+              customKeyCell.textContent = customKey;
+              customValueCell.textContent = value[customKey];
+            }
+          } else {
+            valueCell.textContent = JSON.stringify(value);
+          }
+        } else {
+          valueCell.textContent = value;
+        }
+      }
+    }
+
+    document.body.appendChild(metaTable);
+
+    const br = document.createElement('br');
+    document.body.appendChild(br.cloneNode());
+
+    const flags_h2 = document.createElement('h2');
+    flags_h2.textContent = 'Feature Flags';
+    document.body.appendChild(flags_h2);
+
+    const flagsState = featureManagementData.flags;
+    
+    delete flagsState.flagsState;
+    delete flagsState.$valid;
+    
+    const sortedFlags = [];
+    const trueFlags = [];
+    const stringFlags = [];
+    const falseFlags = [];
+    
+    for (const flag in flagsState) {
+      if (Object.hasOwnProperty.call(flagsState, flag)) {
+        const value = flagsState[flag];
+    
+        if (value === true) {
+          trueFlags.push(flag);
+        } else if (typeof value === 'string') {
+          stringFlags.push({ flag, value });
+        } else if (value === false) {
+          falseFlags.push(flag);
+        }
+      }
+    }
+    
+    stringFlags.sort((a, b) => a.value.localeCompare(b.value));
+    
+    sortedFlags.push(...trueFlags, ...stringFlags.map((item) => item.flag), ...falseFlags);
+    
+    const table = document.createElement('table');
+    table.border = '0';
+    
+    sortedFlags.forEach((flag) => {
+      const value = flagsState[flag];
+    
+      const row = table.insertRow();
+      const flagCell = row.insertCell(0);
+      const valueCell = row.insertCell(1);
+    
+      flagCell.textContent = flag;
+      valueCell.textContent = value === true ? '\u2714' : value === false ? '\u2718' : value;
+    
+      if (value === false) {
+        flagCell.style.color = 'gray';
+      } else if (value === true) {
+        flagCell.style.fontWeight = 'bold';
+      }
+    
+      [flagCell, valueCell].forEach((cell) => {
+        cell.addEventListener('mouseover', () => {
+          row.style.border = '4px solid black';
+        });
+    
+        cell.addEventListener('mouseout', () => {
+          row.style.border = '1px solid black';
+        });
+      });
+    
+      flagCell.style.cursor = 'pointer';
+      flagCell.title = 'Click to copy';
+      flagCell.addEventListener('click', () => {
+        navigator.clipboard.writeText(flag);
+        flagCell.title = 'Copied!';
+        setTimeout(() => {
+          flagCell.title = 'Click to copy';
+        }, 1500);
+      });
     });
-    var userKey = document.getElementById('userKey').value;
-    chrome.storage.local.set({'userKey': userKey}, function() {
-      console.log("Settings saved. userKey = " + userKey);
-    });
-    var flagKey = document.getElementById('flagKey').value;
-    chrome.storage.local.set({'flagKey': flagKey}, function() {
-      console.log("Settings saved. flagKey = " + flagKey);
-    });
-    var enabled = document.getElementById('enabled').checked;
-    chrome.storage.local.set({'enabled': enabled}, function() {
-      console.log("Settings saved. enabled = " + enabled);
-    });
-    var defaultShow = document.getElementById('default').checked;
-    chrome.storage.local.set({'default': defaultShow}, function() {
-      console.log("Settings saved. default = " + defaultShow);
-    });    
-    var customId = document.getElementById('customId').value;
-    chrome.storage.local.set({'customId': customId}, function() {
-      console.log("Settings saved. customId = " + customId);
-    });  
-    var classEnabled = document.getElementById('classEnabled').checked;
-    chrome.storage.local.set({'classEnabled': classEnabled}, function() {
-      console.log("Settings saved. classEnabled = " + classEnabled);
-    });   
-    // Experimentation Options
-    var expEnabled = document.getElementById('expEnabled').checked;
-    chrome.storage.local.set({'expEnabled': expEnabled}, function() {
-      console.log("Settings saved. expEnabled = " + expEnabled);
-    }); 
-    var metricName = document.getElementById('metricName').value;
-    chrome.storage.local.set({'metricName': metricName}, function() {
-      console.log("Settings saved. metricName = " + metricName);
-    });  
-    var winVar = document.getElementById('winVar').value;
-    chrome.storage.local.set({'winVar': winVar}, function() {
-      console.log("Settings saved. winVar = " + winVar);
-    });
-    var winConversion = document.getElementById('winConversion').value;
-    chrome.storage.local.set({'winConversion': winConversion}, function() {
-      console.log("Settings saved. winConversion = " + winConversion);
-    });
-    var loseConversion = document.getElementById('loseConversion').value;
-    chrome.storage.local.set({'loseConversion': loseConversion}, function() {
-      console.log("Settings saved. loseConversion = " + loseConversion);
-    });
-    var refresh = document.getElementById('refresh').value;
-    chrome.storage.local.set({'refresh': refresh}, function() {
-      console.log("Settings saved. refresh = " + refresh);
-    });
-    // Misc Options
-    var debuggerHide = document.getElementById('debuggerHide').checked;
-    chrome.storage.local.set({'debuggerHide': debuggerHide}, function() {
-      console.log("Settings saved. debugger = " + debuggerHide);
-    });    
-    var cssFlagKey = document.getElementById('cssFlagKey').value;
-    chrome.storage.local.set({'cssFlagKey': cssFlagKey}, function() {
-      console.log("Settings saved. cssFlagKey = " + cssFlagKey);
-    });
-  }
-}, false);
+    
+    document.body.appendChild(table);
+    
+  });  
+})

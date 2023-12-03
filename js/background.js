@@ -1,12 +1,8 @@
-
-// this is the background code...
-
-// listen for our browerAction to be clicked
-//chrome.browserAction.onClicked.addListener(function (tab) {
-
-	// for the current tab, inject the "inject.js" file & execute it
-//	chrome.tabs.executeScript(tab.id, {
-//		file: 'inject.js'
-//	});
-//});
-
+$(document).ready(function() { 
+	chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
+		if (message.featureManagementData) {
+			// Pass FEATURE_MANAGEMENT data to popup.js
+			chrome.storage.local.set({ 'featureManagementData': message.featureManagementData, 'url': message.url });
+		}
+	});
+})

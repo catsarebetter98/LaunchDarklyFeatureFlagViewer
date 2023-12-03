@@ -1,40 +1,12 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
   <head>
     <title>LaunchDarkly Demo Tool</title>
-    <script src="js/popup.js"></script>
+    <script type="text/javascript" src="js/jquery-3.4.1.min.js"></script>
+    <script type="text/javascript" src="js/popup.js"></script>
   </head>
-  <body style="width:300px;">
-    <img src="icons/logo32.png" />
-    <span style="font-weight:bold; font-size: large;">LaunchDarkly Demo</span>
-    <hr/>
-    <h3>Demo Options</h3>
-    <input type="checkbox" id="enabled" /> Extension Enabled<br>
-    <input type="checkbox" id="default" />Default Show Block
-    <table>
-      <tr><td>User Key:</td><td><input type="text" id="userKey" /></td></tr>
-      <tr><td>Flag Key:</td><td><input type="text" id="flagKey" /></td></tr>
-      <tr><td>Client-Side ID:</td><td><input type="text" id="id" /></td></tr>
-      <tr><td colspan="2"><hr /></td></tr>
-      <tr><td>Custom Block ID:</td><td><input type="text" id="customId" /></td></tr>
-      <tr><td colspan="2"><input type="checkbox" id="classEnabled" />Use Class Instead of ID</td></tr>
-    </table>
-    <hr/>
-    <h3>Experimentation Options</h3>
-    <input type="checkbox" id="expEnabled" /> Experiment Enabled<br>
-    <table>
-      <tr><td>Winning Variation:</td><td><input type="text" id="winVar" /></td></tr>
-      <tr><td>Metric Name:</td><td><input type="text" id="metricName" /></td></tr>
-      <tr><td>Winning Conversion:</td><td><input type="text" id="winConversion" /></td></tr>
-      <tr><td>Losing Conversion:</td><td><input type="text" id="loseConversion" /></td></tr>
-      <tr><td>Refresh Interval: </td><td><input type="text" id="refresh" size="5" /> Seconds</td></tr>
-    </table>
-    <hr/>
-    <h3>Miscellaneous Options</h3>
-    <input type="checkbox" id="debuggerHide" /> Hide Debugger<br>
-    <table>
-      <tr><td>Break CSS Flag Key:</td><td><input type="text" id="cssFlagKey" /></td></tr>
-    </table>
-    <button id="save">Save</button>
+  <body>
+    <h1 style="font-weight:bold; text-align:center;">LaunchDarkly Feature Flags</h1>
+ 
   </body>
 </html>
